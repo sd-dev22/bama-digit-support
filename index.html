@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bama Digit — Assistance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── RESET ─────────────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ─── BRAND TOKENS ──────────────────────────────────────────────── */
+    :root {
+      --green:       #133E2F;
+      --green-deep:  #0d2d22;
+      --amber:       #F2B824;
+      --amber-deep:  #c99510;
+      --gray:        #F8F9FA;
+      --gray-mid:    #dde2de;
+      --white:       #FFFFFF;
+      --muted:       #6b8070;
+      --line:        rgba(19,62,47,0.1);
+
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body:    'Outfit', sans-serif;
+      --ease-out:     cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--gray);
+      color: var(--green);
+      font-family: var(--font-body);
+      font-weight: 300;
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ─── SUBTLE GRAIN ──────────────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.022;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ─── BG GRADIENT ACCENTS ───────────────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 40% at 50% 0%, rgba(19,62,47,0.07) 0%, transparent 100%),
+        radial-gradient(ellipse 50% 35% at 100% 100%, rgba(242,184,36,0.07) 0%, transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ─── CUSTOM CURSOR ─────────────────────────────────────────────── */
+    #cursor-dot, #cursor-ring {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 10000;
+      transform: translate(-50%, -50%);
+    }
+    #cursor-dot {
+      width: 7px; height: 7px;
+      background: var(--amber);
+      top: 0; left: 0;
+      transition: transform 0.15s;
+    }
+    #cursor-ring {
+      width: 38px; height: 38px;
+      border: 1.5px solid rgba(19,62,47,0.25);
+      top: 0; left: 0;
+      transition: width 0.4s var(--ease-out), height 0.4s var(--ease-out), border-color 0.3s;
+    }
+    body.hovering #cursor-ring {
+      width: 64px; height: 64px;
+      border-color: var(--amber);
+    }
+    body.hovering #cursor-dot { transform: translate(-50%, -50%) scale(1.5); }
+
+    /* ─── LAYOUT ────────────────────────────────────────────────────── */
+    .page {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(3rem, 10vh, 6rem) clamp(1.5rem, 5vw, 4rem);
+      text-align: center;
+    }
+
+    /* ─── BADGE ─────────────────────────────────────────────────────── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: var(--green);
+      color: var(--amber);
+      font-family: var(--font-body);
+      font-weight: 400;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      padding: 0.38rem 1.1rem;
+      opacity: 0;
+      animation: fadeUp 1s var(--ease-out) 0.15s forwards;
+    }
+    .badge-dot {
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--amber);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.7); }
+    }
+
+    /* ─── TITLE ─────────────────────────────────────────────────────── */
+    .title {
+      font-family: var(--font-display);
+      font-weight: 300;
+      font-size: clamp(4.5rem, 16vw, 11rem);
+      line-height: 0.88;
+      letter-spacing: -0.025em;
+      color: var(--green);
+      margin: clamp(1rem, 2.5vh, 1.8rem) 0 0;
+      opacity: 0;
+      animation: fadeUp 1.2s var(--ease-out) 0.35s forwards;
+    }
+    .title-bama  { display: block; }
+    .title-digit {
+      display: block;
+      font-style: italic;
+      color: var(--amber);
+      position: relative;
+    }
+    .title-digit::after {
+      content: '';
+      display: block;
+      width: 55%;
+      height: 2px;
+      background: linear-gradient(to right, var(--amber), transparent);
+      margin: 0.18em auto 0;
+      opacity: 0.55;
+    }
+
+    /* ─── SUBTITLE ──────────────────────────────────────────────────── */
+    .subtitle {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(1rem, 2.8vw, 1.45rem);
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-top: clamp(0.8rem, 2vh, 1.2rem);
+      opacity: 0;
+      animation: fadeUp 1.2s var(--ease-out) 0.55s forwards;
+    }
+
+    /* ─── SEPARATOR ─────────────────────────────────────────────────── */
+    .sep {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      width: clamp(160px, 30vw, 280px);
+      margin: clamp(2rem, 4vh, 3rem) auto;
+      opacity: 0;
+      animation: fadeIn 1s var(--ease-out) 0.8s forwards;
+    }
+    .sep-line    { flex: 1; height: 1px; background: var(--line); }
+    .sep-diamond {
+      width: 6px; height: 6px;
+      border: 1.5px solid var(--amber);
+      transform: rotate(45deg);
+    }
+
+    /* ─── PHILOSOPHY ────────────────────────────────────────────────── */
+    .philosophy {
+      max-width: 500px;
+      font-size: clamp(0.83rem, 1.8vw, 0.95rem);
+      font-weight: 300;
+      color: var(--muted);
+      letter-spacing: 0.025em;
+      line-height: 1.9;
+      opacity: 0;
+      animation: fadeUp 1s var(--ease-out) 0.95s forwards;
+    }
+
+    /* ─── DIVIDERS ──────────────────────────────────────────────────── */
+    .line-h {
+      width: 1px;
+      height: clamp(40px, 6vh, 72px);
+      background: linear-gradient(to bottom, transparent, var(--line), transparent);
+      margin: 0 auto;
+    }
+    .line-v {
+      width: clamp(60px, 12vw, 140px);
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gray-mid), transparent);
+      margin: 0 auto;
+    }
+
+    /* ─── EMAIL ─────────────────────────────────────────────────────── */
+    .contact-section {
+      margin: clamp(2.5rem, 5vh, 4rem) 0;
+      opacity: 0;
+      animation: fadeUp 1s var(--ease-out) 1.1s forwards;
+    }
+    .contact-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+    .email-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.9rem;
+      font-family: var(--font-display);
+      font-size: clamp(0.95rem, 2.2vw, 1.3rem);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      color: var(--white);
+      text-decoration: none;
+      padding: 1rem 2.4rem;
+      background: var(--green);
+      border: 1.5px solid var(--green);
+      overflow: hidden;
+      transition: color 0.4s, border-color 0.4s;
+    }
+    .email-btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: var(--amber);
+      transform: translateX(-101%);
+      transition: transform 0.55s var(--ease-out);
+    }
+    .email-btn:hover::before { transform: translateX(0); }
+    .email-btn:hover { color: var(--green); border-color: var(--amber); }
+    .email-btn span, .email-btn svg { position: relative; z-index: 1; }
+    .email-btn svg { transition: transform 0.3s; }
+    .email-btn:hover svg { transform: translateX(5px); }
+
+    /* ─── TOAST ─────────────────────────────────────────────────────── */
+    .toast {
+      position: fixed;
+      bottom: 2.5rem; left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: var(--green);
+      color: var(--amber);
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 0.65rem 1.6rem;
+      border-left: 2px solid var(--amber);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s var(--ease-out);
+      z-index: 9998;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ─── SOCIAL ────────────────────────────────────────────────────── */
+    .social-section {
+      margin-top: clamp(1.2rem, 2.5vh, 2rem);
+      opacity: 0;
+      animation: fadeUp 1s var(--ease-out) 1.3s forwards;
+    }
+    .social-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .social-grid {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(0.8rem, 3vw, 2rem);
+    }
+    .social-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.55rem;
+      text-decoration: none;
+    }
+    .social-icon {
+      width: clamp(44px, 6.5vw, 54px);
+      height: clamp(44px, 6.5vw, 54px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid var(--line);
+      background: var(--white);
+      color: var(--green);
+      position: relative;
+      overflow: hidden;
+      transition: color 0.4s, border-color 0.4s;
+    }
+    .social-icon::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: var(--green);
+      transform: translateY(100%);
+      transition: transform 0.42s var(--ease-out);
+    }
+    .social-icon::after {
+      content: '';
+      position: absolute;
+      bottom: 5px; right: 5px;
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--amber);
+      transform: scale(0);
+      transition: transform 0.3s var(--ease-out) 0.15s;
+    }
+    .social-item:hover .social-icon { color: var(--white); border-color: var(--green); }
+    .social-item:hover .social-icon::before { transform: translateY(0); }
+    .social-item:hover .social-icon::after  { transform: scale(1); }
+    .social-icon svg { position: relative; z-index: 1; }
+    .social-name {
+      font-size: 0.56rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      transition: color 0.3s;
+    }
+    .social-item:hover .social-name { color: var(--green); }
+
+    /* ─── FOOTER ────────────────────────────────────────────────────── */
+    .footer {
+      margin-top: clamp(3rem, 6vh, 5rem);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.9rem;
+      opacity: 0;
+      animation: fadeIn 1s var(--ease-out) 1.6s forwards;
+    }
+    .footer-brand {
+      font-family: var(--font-display);
+      font-style: italic;
+      font-size: 0.88rem;
+      color: var(--amber);
+      letter-spacing: 0.05em;
+    }
+    .footer-copy {
+      font-size: 0.58rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(19,62,47,0.28);
+    }
+
+    /* ─── ANIMATIONS ────────────────────────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* ─── RESPONSIVE ────────────────────────────────────────────────── */
+    @media (max-width: 520px) {
+      body { cursor: auto; }
+      #cursor-dot, #cursor-ring { display: none; }
+      .social-grid { gap: 0.8rem; }
+      .email-btn { font-size: 0.82rem; padding: 0.85rem 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+  <div class="toast" id="toast">Adresse copiée ✓</div>
+
+  <main class="page">
+
+    <!-- Badge -->
+    <div class="badge">
+      <span class="badge-dot"></span>
+      Studio de développement
+    </div>
+
+    <!-- Title -->
+    <h1 class="title">
+      <span class="title-bama">Bama</span>
+      <span class="title-digit">Digit</span>
+    </h1>
+
+    <!-- Subtitle -->
+    <p class="subtitle">Assistance &amp; Contact</p>
+
+    <!-- Separator -->
+    <div class="sep">
+      <div class="sep-line"></div>
+      <div class="sep-diamond"></div>
+      <div class="sep-line"></div>
+    </div>
+
+    <!-- Philosophy -->
+    <p class="philosophy">
+      Chaque application naît d'une intention. Derrière chaque ligne de code,
+      une vision — celle de créer des expériences qui durent, qui touchent,
+      qui élèvent. Pour toute question ou demande d'assistance, nous sommes là.
+    </p>
+
+    <!-- Vertical line -->
+    <div class="line-h" style="margin: clamp(2rem,4vh,3rem) auto; opacity:0; animation: fadeIn 1s ease 1s forwards;"></div>
+
+    <!-- Email -->
+    <div class="contact-section">
+      <p class="contact-label">Nous contacter</p>
+      <a href="mailto:assistant.bamadigit@proton.me" class="email-btn" id="emailBtn">
+        <span>assistant.bamadigit@proton.me</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="1.6"
+             stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </a>
+    </div>
+
+    <!-- Horizontal line -->
+    <div class="line-v" style="opacity:0; animation: fadeIn 1s ease 1.2s forwards;"></div>
+
+    <!-- Social -->
+    <div class="social-section">
+      <p class="social-label">Suivre Bama Digit</p>
+      <div class="social-grid">
+
+        <!-- Instagram -->
+        <a class="social-item"
+           href="https://www.instagram.com/bama_digit22?igsh=aXF2bGUyYndhMjZk&utm_source=qr"
+           target="_blank" rel="noopener" aria-label="Instagram">
+          <div class="social-icon">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.6"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+            </svg>
+          </div>
+          <span class="social-name">Instagram</span>
+        </a>
+
+        <!-- TikTok -->
+        <a class="social-item"
+           href="https://www.tiktok.com/@bama.digit?_r=1&_t=ZS-95jLfwVMOKT"
+           target="_blank" rel="noopener" aria-label="TikTok">
+          <div class="social-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.73a4.85 4.85 0 0 1-1.01-.04z"/>
+            </svg>
+          </div>
+          <span class="social-name">TikTok</span>
+        </a>
+
+        <!-- Facebook -->
+        <a class="social-item"
+           href="https://www.facebook.com/share/1F6jno4H3v/?mibextid=wwXIfr"
+           target="_blank" rel="noopener" aria-label="Facebook">
+          <div class="social-icon">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+            </svg>
+          </div>
+          <span class="social-name">Facebook</span>
+        </a>
+
+        <!-- Snapchat -->
+        <a class="social-item"
+           href="https://snapchat.com/t/DVPsr5EW"
+           target="_blank" rel="noopener" aria-label="Snapchat">
+          <div class="social-icon">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.206 1c-2.925 0-5.862 1.596-5.862 5.494v1.373c-.515.147-1.025.086-1.393.086-.425 0-.745.295-.745.71 0 .347.222.638.563.71.025.005 1.082.237 1.493 1.576.041.132.043.244-.017.363-.412.82-1.52 1.458-2.245 1.7a.71.71 0 0 0-.5.677c0 .497.393.873.9.96.822.143 1.1.6 1.1.99 0 .14-.04.293-.112.452-.18.394-.098.737.232.96.394.265.895.136 1.37-.047.53-.205 1.067-.31 1.598-.31.464 0 .934.087 1.383.262.79.304 1.418.457 2.035.457.616 0 1.244-.152 2.033-.457.45-.175.92-.262 1.385-.262.53 0 1.066.105 1.596.31.475.183.977.312 1.37.047.33-.223.413-.566.232-.96a1.08 1.08 0 0 1-.111-.452c0-.39.277-.847 1.1-.99.506-.087.9-.463.9-.96a.71.71 0 0 0-.5-.677c-.726-.243-1.833-.88-2.245-1.7-.06-.12-.058-.231-.017-.363.41-1.34 1.468-1.57 1.493-1.576.34-.072.563-.363.563-.71 0-.415-.32-.71-.744-.71-.369 0-.878.06-1.393-.086V6.494C18.068 2.596 15.13 1 12.206 1z"/>
+            </svg>
+          </div>
+          <span class="social-name">Snapchat</span>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="line-v"></div>
+      <span class="footer-brand">Bama Digit</span>
+      <p class="footer-copy">&copy; 2025 · Tous droits réservés</p>
+    </div>
+
+  </main>
+
+  <script>
+    /* ── Cursor ── */
+    const dot = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      dot.style.left = mx + 'px';
+      dot.style.top  = my + 'px';
+    });
+    (function loop() {
+      rx += (mx - rx) * 0.11;
+      ry += (my - ry) * 0.11;
+      ring.style.left = rx + 'px';
+      ring.style.top  = ry + 'px';
+      requestAnimationFrame(loop);
+    })();
+    document.querySelectorAll('a').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+    });
+
+    /* ── Email copy ── */
+    const emailBtn = document.getElementById('emailBtn');
+    const toast    = document.getElementById('toast');
+    emailBtn.addEventListener('click', e => {
+      e.preventDefault();
+      navigator.clipboard.writeText('assistant.bamadigit@proton.me')
+        .then(() => { toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2600); })
+        .catch(() => { window.location.href = emailBtn.href; });
+    });
+
+    /* ── Magnetic — social icons ── */
+    document.querySelectorAll('.social-item').forEach(item => {
+      item.addEventListener('mousemove', e => {
+        const r = item.getBoundingClientRect();
+        item.style.transform = `translate(${(e.clientX-(r.left+r.width/2))*0.26}px,${(e.clientY-(r.top+r.height/2))*0.26}px)`;
+        item.style.transition = 'transform 0.08s';
+      });
+      item.addEventListener('mouseleave', () => {
+        item.style.transform = '';
+        item.style.transition = 'transform 0.55s cubic-bezier(0.16,1,0.3,1)';
+      });
+    });
+
+    /* ── Magnetic — email button ── */
+    emailBtn.addEventListener('mousemove', e => {
+      const r = emailBtn.getBoundingClientRect();
+      emailBtn.style.transform = `translate(${(e.clientX-(r.left+r.width/2))*0.10}px,${(e.clientY-(r.top+r.height/2))*0.20}px)`;
+      emailBtn.style.transition = 'transform 0.08s, color 0.4s, border-color 0.4s';
+    });
+    emailBtn.addEventListener('mouseleave', () => {
+      emailBtn.style.transform = '';
+      emailBtn.style.transition = 'transform 0.6s cubic-bezier(0.16,1,0.3,1), color 0.4s, border-color 0.4s';
+    });
+  </script>
+</body>
+</html>
